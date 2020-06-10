@@ -12,6 +12,9 @@ datasets are either from the tutorials for Tensorflow or from UC Irvine at https
 
 Useful links
 
+Google Colab
+https://colab.research.google.com/
+
 Tensorflow Tutorials:
 https://www.tensorflow.org/tutorials
 
