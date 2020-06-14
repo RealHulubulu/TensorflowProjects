@@ -4,7 +4,7 @@ These are projects I have been developing using Tensorflow Estimators. I am usin
 as a base for my projects. I want to create simple apps that utilize Tensorflow Estimators. This will allow for people to explore the power behind machine learning, and specifically neural networks, in data analytics. All links are also found at the bottom of this file.
 Use Google Colab for a free environment where you can explore and test my code and tensorflow in general. It's pretty awesome.
 
-Update 6/10/2020: <br /> I added in two scripts that use DNNClassifier. The TensorflowDNNClassifier.py creates a model using a cars
+Update 6/14/2020: <br /> I added in two scripts that use DNNClassifier. The TensorflowDNNClassifier.py creates a model using a cars
 dataset from UC Irvine. The dataset isn't ideal for deep learning as it is simpler and linear. If you have a more complex dataset it
 is very simple to use this code on your dataset. The TensorflowDNNClassifier_MNIST.py creates a model for recognizing numbers using
 the famous MNIST dataset from keras. I got the general code from a tutorial. It is very simple code at around 50 lines but creates, 
