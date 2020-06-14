@@ -22,7 +22,7 @@ validation_list = []
 
 #%%
 def user_input():
-    print()
+    """user input function for selecting dataset, label from dataset, number of runs (defaults to 1 run)"""
     print("Dataset Options\n 1-flowers\n 2-titanic\n 3-breast_cancer\n 4-adult_income\n 5-cars\n 6-chess\n 7-mushrooms\n 8-custom\n else-EXIT")
     print()
     data_selection = input("Enter dataset number:")
@@ -106,11 +106,14 @@ def user_input():
     return (dfAll, label, number_of_runs)
 #%%
 def Convert(string): 
+    """converts string to list"""
     li = list(string.split(" ")) 
     return li 
 
-def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32):
+def make_input_fn(data_df, label_df, num_epochs=50, shuffle=True, batch_size=32):
+    """returns the bottom function for a reusable input function, format from tensorflow website"""
     def input_function():
+        """standard input function for models"""
         ds = tf.data.Dataset.from_tensor_slices((dict(data_df), label_df))
         if shuffle:
             ds = ds.shuffle(1000)
@@ -119,10 +122,12 @@ def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32)
     return input_function
 
 def split_data(data, test_size=0.2):
+    """splits data into training (80%) and testing (20%)"""
     train, test = train_test_split(data, test_size=test_size)
     return train, test
 
 def cols_names(data, cat_or_num = False):
+    """returns lists of column names, can handle datasets with both categorical and numeric data"""
     if cat_or_num == True:
         list_cat = []
         list_num = []
@@ -147,12 +152,13 @@ def cols_names(data, cat_or_num = False):
             list_col_names.append(col)
         return list_col_names
 
-def feature_name_creator(cat_col, num_col, train_data):
+def feature_col_creator(cat_col, num_col, train_data):
+    """returns the feature columns needed for building the model"""
     feature_columns = []
     
     for feature_name in cat_col:
       vocabulary = train_data[feature_name].unique()
-      print(vocabulary)
+      # print(vocabulary)
       
       feature_columns.append(tf.feature_column.categorical_column_with_vocabulary_list(feature_name, vocabulary))
     
@@ -162,17 +168,19 @@ def feature_name_creator(cat_col, num_col, train_data):
     return feature_columns
     
 def pred_input_fn(features, batch_size=32):
-        """An input function for prediction."""
-        # Convert the inputs to a Dataset without labels.
-        return tf.data.Dataset.from_tensor_slices(dict(features)).batch(batch_size)
+    """creates a separate input function just for validation"""
+    """An input function for prediction"""
+    # Convert the inputs to a Dataset without labels.
+    return tf.data.Dataset.from_tensor_slices(dict(features)).batch(batch_size)
     
 def linear_est_creator(feature_columns, num_classes, y_vocab):
+    """returns a created LinearClassifier model"""
     linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns,
                                                n_classes=num_classes, label_vocabulary=y_vocab)
     return linear_est
 
 def data_prep(data, y_label_name):
-    
+    """takes in the dataset and label, returns splits for training, testing, validation"""
     train, test_no_valid = split_data(data)
     test, validate = split_data(test_no_valid, test_size=0.05)
     
@@ -188,12 +196,12 @@ def data_prep(data, y_label_name):
     
     return train, test, validate, y_train, y_test, validate_y
    
-def linear_class_est(y_label_name, dfAll):
-    
+def linear_class_est_train_test_valid(y_label_name, dfAll):
+    """takes in dataset and label, uses prevoius functions for training, test, validation"""
     train, test, validate, y_train, y_test, validate_y = data_prep(dfAll, y_label_name)
     
     CATEGORICAL_COLUMNS, NUMERIC_COLUMNS = cols_names(train, cat_or_num = True)
-    feature_columns = feature_name_creator(CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, train)
+    feature_columns = feature_col_creator(CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, train)
     
     y_vocab = list(y_test.unique())
     num_classes = len(y_vocab)
@@ -217,7 +225,7 @@ def linear_class_est(y_label_name, dfAll):
     prediction_results(linear_est, validate, validate_y, y_vocab)
 
 def prediction_results(linear_est, validate, validate_y, y_vocab):
-    
+    """saves validation results for each run in a list"""
     prediction = linear_est.predict(input_fn=lambda: pred_input_fn(validate))
     temp_list_per_run = []
     for pred_dict, expec in zip(prediction, validate_y):
@@ -240,13 +248,12 @@ def prediction_results(linear_est, validate, validate_y, y_vocab):
 #         temp_list_per_run.append(temp_list_per_item)
 #     validation_list.append(temp_list_per_run)
 
-#%%
 def main():
-    
+    """puts everything together"""
     dfAll, label, number_of_runs = user_input()
     
     for i in range(number_of_runs):
-        linear_class_est(label, dfAll)  
+        linear_class_est_train_test_valid(label, dfAll)  
     print()
     
     #To see avg acc across all runs    
