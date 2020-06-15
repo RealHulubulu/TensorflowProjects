@@ -37,8 +37,8 @@ def split_data(data, test_size=0.2):
     
 def data_prep(data, y_label_name):
     
-    train, test_no_valid = split_data(data)
-    test, validate = split_data(test_no_valid, test_size=0.05)
+    train, validate = split_data(data)
+    train, test = split_data(train, test_size=0.05)
     
     # #doing pop below removes Classif col
     y_train = train.pop(y_label_name)
@@ -162,26 +162,26 @@ def main():
     
     # Test the model    
     eval_result = classifier.evaluate(
-        input_fn=lambda: input_fn(test, y_test, training=False))
+        input_fn=lambda: input_fn(validate, validate_y, training=False))
     print('\nTest set accuracy: {accuracy:0.3f}\n'.format(**eval_result))
     print(eval_result)
     
     # Validate the model
     prediction = classifier.predict(
-        input_fn=lambda: prediction_input_fn(validate))
+        input_fn=lambda: prediction_input_fn(test))
     
     y_vocab = list(y_train.unique())
     
     pred_acc_count = 0
-    for pred_dict, expec in zip(prediction, validate_y):
+    for pred_dict, expec in zip(prediction, y_test):
         class_id = pred_dict['class_ids'][0]
         probability = pred_dict['probabilities'][class_id]
         print('Prediction is "{}" ({:.1f}%), expected "{}"'.format(
-            y_vocab[class_id], 100 * probability, number_to_label(expec, y_train)))
-        if y_vocab[class_id] == number_to_label(expec, y_train):
+            y_vocab[class_id], 100 * probability, number_to_label(expec, y_test)))
+        if y_vocab[class_id] == number_to_label(expec, y_test):
             pred_acc_count += 1
     print('Prediction accuracy of validation is {}%' 
-              .format(100*(pred_acc_count/len(validate_y))))
+              .format(100*(pred_acc_count/len(y_test))))
 
 #%%
 if __name__ == "__main__":

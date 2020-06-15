@@ -18,7 +18,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 base_accuracy_list = []
-validation_list = []
+test_list = []
 
 #%%
 def user_input():
@@ -181,8 +181,8 @@ def linear_est_creator(feature_columns, num_classes, y_vocab):
 
 def data_prep(data, y_label_name):
     """takes in the dataset and label, returns splits for training, testing, validation"""
-    train, test_no_valid = split_data(data)
-    test, validate = split_data(test_no_valid, test_size=0.05)
+    train, validate = split_data(data)
+    train, test = split_data(train, test_size=0.05)
     
     # #doing pop below removes Classif col
     y_train = train.pop(y_label_name)
@@ -207,12 +207,12 @@ def linear_class_est_train_test_valid(y_label_name, dfAll):
     num_classes = len(y_vocab)
     
     train_input_fn = make_input_fn(train, y_train)
-    test_input_fn = make_input_fn(test, y_test, num_epochs=1, shuffle=False)
+    validate_input_fn = make_input_fn(validate, validate_y, num_epochs=1, shuffle=False)
     
     linear_est = linear_est_creator(feature_columns, num_classes, y_vocab)
     
     training = linear_est.train(train_input_fn)
-    result = linear_est.evaluate(test_input_fn)
+    result = linear_est.evaluate(validate_input_fn)
     
     clear_output()
     
@@ -221,21 +221,21 @@ def linear_class_est_train_test_valid(y_label_name, dfAll):
     # print(result)
     # print(result['accuracy'])
     
-    #Below is for validations 
-    prediction_results(linear_est, validate, validate_y, y_vocab)
+    #Below is for testing
+    prediction_results(linear_est, test, y_test, y_vocab)
 
-def prediction_results(linear_est, validate, validate_y, y_vocab):
-    """saves validation results for each run in a list"""
-    prediction = linear_est.predict(input_fn=lambda: pred_input_fn(validate))
+def prediction_results(linear_est, test, y_test, y_vocab):
+    """saves test results for each run in a list"""
+    prediction = linear_est.predict(input_fn=lambda: pred_input_fn(test))
     temp_list_per_run = []
-    for pred_dict, expec in zip(prediction, validate_y):
+    for pred_dict, expec in zip(prediction, y_test):
         class_id = pred_dict['class_ids'][0]
         probability = pred_dict['probabilities'][class_id]
         temp_list_per_item = [y_vocab[class_id], str(100*probability), expec]
         temp_list_per_run.append(temp_list_per_item)
-    validation_list.append(temp_list_per_run)
+    test_list.append(temp_list_per_run)
     
-# Use this function if validating against new data
+# Use this function if testing against new data
 # def prediction_new_results(linear_est, y_vocab):
 #     validate = "some user input data as pd"
 #     validate_y = "some user input data labels as pd"
@@ -257,16 +257,16 @@ def main():
     print()
     
     #To see avg acc across all runs    
-    print("Accuracy")
+    print("Accuracy from validation")
     # print(base_accuracy_list)
     base_avg_acc = sum(base_accuracy_list)/len(base_accuracy_list)    
     print("Avg Acc: " + str(base_avg_acc))
     
-#To see validation for the final run   
-    print("Validation")
+# To see test for the final run   
+    print("Test")
     # print(validation_list)
     pred_accuracy = 0
-    for index in validation_list[-1]:
+    for index in test_list[-1]:
         y_label = index[0]
         prob = index[1]
         expect = index[2]
@@ -274,9 +274,9 @@ def main():
                 y_label, prob, expect))
         if y_label == expect:
             pred_accuracy += 1
-    print('Prediction accuracy of validation from final run {} is {}%' 
-          .format(validation_list.index(validation_list[-1]),
-                  100*(pred_accuracy/len(validation_list[-1]))))
+    print('Prediction accuracy of test from final run {} is {}%' 
+          .format(test_list.index(test_list[-1]),
+                  100*(pred_accuracy/len(test_list[-1]))))
     
 # #To see validation testing for each run
 # print("Validation")

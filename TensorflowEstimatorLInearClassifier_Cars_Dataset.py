@@ -29,9 +29,9 @@ modified_accuracy_list = []
 
 # Each run creates two new models, one with and one without crossed columns, saves accuracy each time
 for acc_counter in range(1):
-
-    train, test_no_valid = train_test_split(dfAll, test_size=0.2)
-    test, validate = train_test_split(test_no_valid, test_size=0.05)    
+    
+    train, validate = train_test_split(dfAll, test_size=0.2)
+    train, test = train_test_split(train, test_size=0.05)    
 
     Y_COL = "Classif"
     #doing pop below removes Classif col from train, test, validate
@@ -67,7 +67,7 @@ for acc_counter in range(1):
         return input_function
     
     train_input_fn = make_input_fn(train, y_train)
-    test_input_fn = make_input_fn(test, y_test, num_epochs=1, shuffle=False)
+    validate_input_fn = make_input_fn(validate, validate_y, num_epochs=1, shuffle=False)
 
     ## this just shows samples of feature keys and batch class/labels
     # ds = make_input_fn(train, y_train, batch_size=10)()
@@ -83,7 +83,7 @@ for acc_counter in range(1):
     # Training model
     linear_est.train(train_input_fn)
     # Testing model
-    result = linear_est.evaluate(test_input_fn)
+    result = linear_est.evaluate(validate_input_fn)
     clear_output()
     print(result)
     # print(result['accuracy'])
@@ -101,7 +101,7 @@ for acc_counter in range(1):
     # Train model
     linear_est.train(train_input_fn)
     # Test Model
-    result = linear_est.evaluate(test_input_fn)
+    result = linear_est.evaluate(validate_input_fn)
     clear_output()
     print(result)
     # print(result['accuracy'])
@@ -126,7 +126,7 @@ def pred_input_fn(features, batch_size=256):
     """An input function for prediction. Convert the inputs to a Dataset without labels"""
     return tf.data.Dataset.from_tensor_slices(dict(features)).batch(batch_size)
 
-prediction = linear_est.predict(input_fn=lambda: pred_input_fn(validate))
+prediction = linear_est.predict(input_fn=lambda: pred_input_fn(test))
 
 ## below creates a list of all prediction accuracies for a given index, here [1] == "acc"
 ## making the list affects output
@@ -136,11 +136,11 @@ prediction = linear_est.predict(input_fn=lambda: pred_input_fn(validate))
 
 print()
 print("Validation using the improved modified model")
-for pred_dict, expec in zip(prediction, validate_y):
+for pred_dict, expec in zip(prediction, y_test):
     class_id = pred_dict['class_ids'][0]
     probability = pred_dict['probabilities'][class_id]
     print('Prediction is "{}" ({:.1f}%), expected "{}"'.format(
         y_vocab_labels[class_id], 100 * probability, expec))
     if y_vocab_labels[class_id] == expec:
         pred_accuracy += 1
-print('Prediction accuracy of validation set is {}%' .format(100*(pred_accuracy/len(validate_y))))
+print('Prediction accuracy of validation set is {}%' .format(100*(pred_accuracy/len(y_test))))
