@@ -27,16 +27,20 @@ dfAll = pd.read_csv('C:/Users/karas/jupyter/car.txt', names=["Buying", "Maint", 
 base_accuracy_list = []
 modified_accuracy_list = []
 
+# this has been moved outside of the below for loop to better serve as test set
+train_and_valid, test = train_test_split(dfAll, test_size=0.05) 
+y_test = test.pop("Classif")
+
 # Each run creates two new models, one with and one without crossed columns, saves accuracy each time
 for acc_counter in range(1):
     
-    train, validate = train_test_split(dfAll, test_size=0.2)
-    train, test = train_test_split(train, test_size=0.05)    
+    train, validate = train_test_split(train_and_valid, test_size=0.2)
+    # train, test = train_test_split(train, test_size=0.05)    
 
     Y_COL = "Classif"
     #doing pop below removes Classif col from train, test, validate
     y_train = train.pop(Y_COL)
-    y_test = test.pop(Y_COL)
+    # y_test = test.pop(Y_COL)
     validate_y = validate.pop(Y_COL)
 
     # creating feature columns 
@@ -80,9 +84,9 @@ for acc_counter in range(1):
      
     # Create model with basic feature columns
     linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns, n_classes=4, label_vocabulary=y_vocab)
-    # Training model
+    # Train model
     linear_est.train(train_input_fn)
-    # Testing model
+    # Validate model
     result = linear_est.evaluate(validate_input_fn)
     clear_output()
     print(result)
@@ -100,7 +104,7 @@ for acc_counter in range(1):
     linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns+derived_feature_columns, n_classes=4, label_vocabulary=y_vocab)
     # Train model
     linear_est.train(train_input_fn)
-    # Test Model
+    # Validate Model
     result = linear_est.evaluate(validate_input_fn)
     clear_output()
     print(result)
@@ -118,7 +122,7 @@ print("Modified avg acc: " + str(modified_avg_acc))
 print()
 #%%
 
-# this is for testing against the validation set, uses the crossed feature column model
+# this is for testing against the test set, uses the crossed feature column model
 y_vocab_labels = ["unacc", "acc", "good", "vgood"]
 pred_accuracy = 0
 

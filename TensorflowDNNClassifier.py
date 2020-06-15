@@ -38,19 +38,19 @@ def split_data(data, test_size=0.2):
 def data_prep(data, y_label_name):
     
     train, validate = split_data(data)
-    train, test = split_data(train, test_size=0.05)
+    # train, test = split_data(train, test_size=0.05)
     
-    # #doing pop below removes Classif col
+    # # doing pop below removes Classif col
     y_train = train.pop(y_label_name)
-    y_test = test.pop(y_label_name) 
+    # y_test = test.pop(y_label_name) 
     validate_y = validate.pop(y_label_name)
     
     #y labels have to be strings to use y vocab
     y_train = y_train.astype(str)
-    y_test = y_test.astype(str)
+    # y_test = y_test.astype(str)
     validate_y = validate_y.astype(str)
     
-    return train, test, validate, y_train, y_test, validate_y
+    return train, validate, y_train, validate_y
 
 def convert_labels_to_num(y_series):
     new_y = []
@@ -131,57 +131,64 @@ def number_to_label(num, y_train):
 
 def main():
 
-    train, test, validate, y_train, y_test, validate_y = data_prep(dfAll, label)
+    # this has been moved to outside data_prep() to better serve as test set
+    train_and_valid, test = split_data(dfAll, test_size=0.05)
+    y_test = test.pop(label) 
+    y_test = y_test.astype(str)
+
+    for i in range(2):
+        train, validate, y_train, validate_y = data_prep(train_and_valid, label)
+        
+        # print(train.head)
+        # print(y_train.head)
+        # print(type(y_train))
+        # y_vocab = list(y_train.unique())
+        # print(y_vocab)
+        
+        #create feature columns, labels have to be numeric
+        y_train = convert_labels_to_num(y_train)
+        y_test = convert_labels_to_num(y_test)
+        validate_y = convert_labels_to_num(validate_y)
+        cat_col, num_col = cols_names(train, cat_or_num = True)
+        my_feature_columns = feature_col_creator(cat_col, num_col, train)
+        # print(my_feature_columns)
+        
+        # Build a DNN with 1 hidden layer
+        classifier = tf.estimator.DNNClassifier(
+            feature_columns=my_feature_columns,
+            # Can have multiple hidden layers, node count between input and output layer size
+            hidden_units=[4],
+            # The model must choose between n_classes.
+            n_classes=4)
+        
+        # Train the model
+        classifier.train(
+            input_fn=lambda: input_fn(train, y_train, training=True),
+            steps=15000)
+        
+        # Validate the model    
+        eval_result = classifier.evaluate(
+            input_fn=lambda: input_fn(validate, validate_y, training=False))
+        print('\nValidation set accuracy: {accuracy:0.3f}\n'.format(**eval_result))
+        print(eval_result)
     
-    # print(train.head)
-    # print(y_train.head)
-    # print(type(y_train))
-    # y_vocab = list(y_train.unique())
-    # print(y_vocab)
     
-    #create feature columns, labels have to be numeric
-    y_train = convert_labels_to_num(y_train)
-    y_test = convert_labels_to_num(y_test)
-    validate_y = convert_labels_to_num(validate_y)
-    cat_col, num_col = cols_names(train, cat_or_num = True)
-    my_feature_columns = feature_col_creator(cat_col, num_col, train)
-    # print(my_feature_columns)
-    
-    # Build a DNN with 1 hidden layer
-    classifier = tf.estimator.DNNClassifier(
-        feature_columns=my_feature_columns,
-        # Can have multiple hidden layers, node count between input and output layer size
-        hidden_units=[4],
-        # The model must choose between n_classes.
-        n_classes=4)
-    
-    # Train the model
-    classifier.train(
-        input_fn=lambda: input_fn(train, y_train, training=True),
-        steps=15000)
-    
-    # Test the model    
-    eval_result = classifier.evaluate(
-        input_fn=lambda: input_fn(validate, validate_y, training=False))
-    print('\nTest set accuracy: {accuracy:0.3f}\n'.format(**eval_result))
-    print(eval_result)
-    
-    # Validate the model
-    prediction = classifier.predict(
-        input_fn=lambda: prediction_input_fn(test))
-    
-    y_vocab = list(y_train.unique())
-    
-    pred_acc_count = 0
-    for pred_dict, expec in zip(prediction, y_test):
-        class_id = pred_dict['class_ids'][0]
-        probability = pred_dict['probabilities'][class_id]
-        print('Prediction is "{}" ({:.1f}%), expected "{}"'.format(
-            y_vocab[class_id], 100 * probability, number_to_label(expec, y_test)))
-        if y_vocab[class_id] == number_to_label(expec, y_test):
-            pred_acc_count += 1
-    print('Prediction accuracy of validation is {}%' 
-              .format(100*(pred_acc_count/len(y_test))))
+        # Test the model
+        prediction = classifier.predict(
+            input_fn=lambda: prediction_input_fn(test))
+        
+        y_vocab = list(y_train.unique())
+        
+        pred_acc_count = 0
+        for pred_dict, expec in zip(prediction, y_test):
+            class_id = pred_dict['class_ids'][0]
+            probability = pred_dict['probabilities'][class_id]
+            print('Prediction is "{}" ({:.1f}%), expected "{}"'.format(
+                y_vocab[class_id], 100 * probability, number_to_label(expec, y_test)))
+            if y_vocab[class_id] == number_to_label(expec, y_test):
+                pred_acc_count += 1
+        print('Prediction accuracy of validation is {}%' 
+                  .format(100*(pred_acc_count/len(y_test))))
 
 #%%
 if __name__ == "__main__":

@@ -20,6 +20,8 @@ from sklearn.model_selection import train_test_split
 base_accuracy_list = []
 test_list = []
 
+
+
 #%%
 def user_input():
     """user input function for selecting dataset, label from dataset, number of runs (defaults to 1 run)"""
@@ -182,23 +184,23 @@ def linear_est_creator(feature_columns, num_classes, y_vocab):
 def data_prep(data, y_label_name):
     """takes in the dataset and label, returns splits for training, testing, validation"""
     train, validate = split_data(data)
-    train, test = split_data(train, test_size=0.05)
+    # train, test = split_data(train, test_size=0.05)
     
     # #doing pop below removes Classif col
     y_train = train.pop(y_label_name)
-    y_test = test.pop(y_label_name) 
+    # y_test = test.pop(y_label_name) 
     validate_y = validate.pop(y_label_name)
     
     #y labels have to be strings to use y vocab
     y_train = y_train.astype(str)
-    y_test = y_test.astype(str)
+    # y_test = y_test.astype(str)
     validate_y = validate_y.astype(str)
     
-    return train, test, validate, y_train, y_test, validate_y
+    return train, validate, y_train, validate_y
    
-def linear_class_est_train_test_valid(y_label_name, dfAll):
+def linear_class_est_train_test_valid(y_label_name, dfAll, test, y_test):
     """takes in dataset and label, uses prevoius functions for training, test, validation"""
-    train, test, validate, y_train, y_test, validate_y = data_prep(dfAll, y_label_name)
+    train, validate, y_train, validate_y = data_prep(dfAll, y_label_name)
     
     CATEGORICAL_COLUMNS, NUMERIC_COLUMNS = cols_names(train, cat_or_num = True)
     feature_columns = feature_col_creator(CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, train)
@@ -252,47 +254,54 @@ def main():
     """puts everything together"""
     dfAll, label, number_of_runs = user_input()
     
+    # this has been moved to outside data_prep() to better serve as test set
+    train_and_valid, test = split_data(dfAll, test_size=0.05)
+    y_test = test.pop(label)
+    y_test = y_test.astype(str)
+    
     for i in range(number_of_runs):
-        linear_class_est_train_test_valid(label, dfAll)  
+        linear_class_est_train_test_valid(label, train_and_valid, test, y_test)  
     print()
     
     #To see avg acc across all runs    
     print("Accuracy from validation")
-    # print(base_accuracy_list)
+    print("Acc each run: "+str(base_accuracy_list))
     base_avg_acc = sum(base_accuracy_list)/len(base_accuracy_list)    
     print("Avg Acc: " + str(base_avg_acc))
     
 # To see test for the final run   
-    print("Test")
-    # print(validation_list)
-    pred_accuracy = 0
-    for index in test_list[-1]:
-        y_label = index[0]
-        prob = index[1]
-        expect = index[2]
-        print('Prediction is "{}" ({}%), expected "{}"'.format(
-                y_label, prob, expect))
-        if y_label == expect:
-            pred_accuracy += 1
-    print('Prediction accuracy of test from final run {} is {}%' 
-          .format(test_list.index(test_list[-1]),
-                  100*(pred_accuracy/len(test_list[-1]))))
+    # print("Test")
+    # # print(validation_list)
+    # pred_accuracy = 0
+    # for index in test_list[-1]:
+    #     y_label = index[0]
+    #     prob = index[1]
+    #     expect = index[2]
+    #     print('Prediction is "{}" ({}%), expected "{}"'.format(
+    #             y_label, prob, expect))
+    #     if y_label == expect:
+    #         pred_accuracy += 1
+    # print('Prediction accuracy of test from final run {} is {}%' 
+    #       .format(test_list.index(test_list[-1]),
+    #               100*(pred_accuracy/len(test_list[-1]))))
     
-# #To see validation testing for each run
-# print("Validation")
-# for run in validation_list:
-#     pred_accuracy = 0
-#     for index in run:
-#         y_label = index[0]
-#         prob = index[1]
-#         expect = index[2]
-#         print('Prediction is "{}" ({}%), expected "{}"'.format(
-#             y_label, prob, expect))
-#         if y_label == expect:
-#             pred_accuracy += 1
-#     print('Prediction accuracy of validation from run {} is {}%' .format(validation_list.index(run),100*(pred_accuracy/len(run))))
-#     print()
-#     print()
+    print()
+    # To see validation testing for each run
+    print("Test of All")
+    run_counter = 1
+    for run in test_list:
+        print("\nRun {}".format(run_counter))
+        pred_accuracy = 0
+        for index in run:
+            y_label = index[0]
+            prob = index[1]
+            expect = index[2]
+            print('Prediction is "{}" ({}%), expected "{}"'.format(
+                y_label, prob, expect))
+            if y_label == expect:
+                pred_accuracy += 1
+        print('Prediction accuracy of validation from run {} is {}%' .format(test_list.index(run),100*(pred_accuracy/len(run))))
+        run_counter += 1
 #%%
 if __name__ == "__main__":
     main()
