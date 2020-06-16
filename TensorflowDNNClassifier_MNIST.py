@@ -68,17 +68,3 @@ test_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
 accuracy_score = classifier.evaluate(input_fn=test_input_fn)["accuracy"]
 print("\nTest Accuracy: {0:f}%\n".format(accuracy_score*100))
 
-#%%
-"""Extra code"""
-# this input function is possible to use, however data has to be flattened into 1D array
-# def input_fn_using_flatten_data(features, labels, training=True, batch_size=64): #was 256
-#     """An input function for training or evaluating"""
-#     # Convert the inputs to a Dataset.
-#     dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
-
-#     # Shuffle and repeat if you are in training mode.
-#     if training:
-#         dataset = dataset.shuffle(150).repeat() # dataset.shuffle(buffer_size, seed=seed, reshuffle_each_iteration=True).repeat(count)
-#     return dataset.batch(batch_size)
-
-# classifier.train(input_fn=lambda: input_fn_using_flatten_data(dataset_mnist, labels_mnist), steps=100000)
