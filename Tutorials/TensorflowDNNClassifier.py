@@ -136,7 +136,7 @@ def main():
     y_test = test.pop(label) 
     y_test = y_test.astype(str)
 
-    for i in range(2):
+    for i in range(1):
         train, validate, y_train, validate_y = data_prep(train_and_valid, label)
         
         # print(train.head)
@@ -157,7 +157,7 @@ def main():
         classifier = tf.estimator.DNNClassifier(
             feature_columns=my_feature_columns,
             # Can have multiple hidden layers, node count between input and output layer size
-            hidden_units=[4],
+            hidden_units=[6],
             # The model must choose between n_classes.
             n_classes=4)
         
@@ -187,7 +187,7 @@ def main():
                 y_vocab[class_id], 100 * probability, number_to_label(expec, y_test)))
             if y_vocab[class_id] == number_to_label(expec, y_test):
                 pred_acc_count += 1
-        print('Prediction accuracy of validation is {}%' 
+        print('Prediction accuracy of test is {}%' 
                   .format(100*(pred_acc_count/len(y_test))))
 
 #%%

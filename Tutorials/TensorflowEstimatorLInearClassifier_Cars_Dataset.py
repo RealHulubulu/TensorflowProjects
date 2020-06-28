@@ -59,7 +59,7 @@ for acc_counter in range(1):
     # print(y_vocab)
     # print(y_feature_columns)
     
-    def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32):
+    def make_input_fn(data_df, label_df, num_epochs=50, shuffle=True, batch_size=32):
         """returns the bottom function for a reusable input function, format from tensorflow website"""
         def input_function():
             """standard input function for models"""
@@ -139,7 +139,7 @@ prediction = linear_est.predict(input_fn=lambda: pred_input_fn(test))
 # print(prediction_list)
 
 print()
-print("Validation using the improved modified model")
+print("Testing using the improved modified model")
 for pred_dict, expec in zip(prediction, y_test):
     class_id = pred_dict['class_ids'][0]
     probability = pred_dict['probabilities'][class_id]
@@ -147,4 +147,4 @@ for pred_dict, expec in zip(prediction, y_test):
         y_vocab_labels[class_id], 100 * probability, expec))
     if y_vocab_labels[class_id] == expec:
         pred_accuracy += 1
-print('Prediction accuracy of validation set is {}%' .format(100*(pred_accuracy/len(y_test))))
+print('Prediction accuracy of test set is {}%' .format(100*(pred_accuracy/len(y_test))))

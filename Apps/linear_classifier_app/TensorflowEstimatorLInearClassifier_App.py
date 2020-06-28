@@ -49,7 +49,7 @@ def user_input():
         df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer/breast-cancer.data', names=CSV_COLUMN_NAMES, header=0)
         label = "Class"
     elif data_selection == str(4):
-        CSV_COLUMN_NAMES = ["income", "age", "workclass", "fnlwgt", "education", "education-num", "marital_status", "occupation", "relationship", "race", "sex", "capital_gain", "capital-loss", "hours-per-week", "native-country"] #adult.names
+        CSV_COLUMN_NAMES = ["age", "workclass", "fnlwgt", "education", "education-num", "marital_status", "occupation", "relationship", "race", "sex", "capital_gain", "capital-loss", "hours-per-week", "native-country", "income"] #adult.names
         df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', names=CSV_COLUMN_NAMES, header=0)
         label = "income"
     elif data_selection == str(5):       
@@ -101,9 +101,11 @@ def user_input():
     # validation_list = []
     print("Below is a look at the data in the selected dataset using df.head()")
     print(dfAll.head())
+    print(dfAll.shape)
     print()
     print("This will run {} times and display the average accuracy and valdiation at the end".format(number_of_runs))
     input("Press Enter to continue...")
+    # sys.exit()
     
     return (dfAll, label, number_of_runs)
 #%%
@@ -123,9 +125,9 @@ def make_input_fn(data_df, label_df, num_epochs=50, shuffle=True, batch_size=32)
         return ds
     return input_function
 
-def split_data(data, test_size=0.2):
+def split_data(data, label, test_size=0.2):
     """splits data into training (80%) and testing (20%)"""
-    train, test = train_test_split(data, test_size=test_size)
+    train, test = train_test_split(data, test_size=test_size, stratify = data[label])
     return train, test
 
 def cols_names(data, cat_or_num = False):
@@ -178,12 +180,15 @@ def pred_input_fn(features, batch_size=32):
 def linear_est_creator(feature_columns, num_classes, y_vocab):
     """returns a created LinearClassifier model"""
     linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns,
-                                               n_classes=num_classes, label_vocabulary=y_vocab)
+                                               n_classes=num_classes, 
+                                               label_vocabulary=y_vocab,
+                                                optimizer = 'Adam'
+                                               )
     return linear_est
 
 def data_prep(data, y_label_name):
     """takes in the dataset and label, returns splits for training, testing, validation"""
-    train, validate = split_data(data)
+    train, validate = split_data(data, label = y_label_name)
     # train, test = split_data(train, test_size=0.05)
     
     # #doing pop below removes Classif col
@@ -225,6 +230,7 @@ def linear_class_est_train_test_valid(y_label_name, dfAll, test, y_test):
     
     #Below is for testing
     prediction_results(linear_est, test, y_test, y_vocab)
+    
 
 def prediction_results(linear_est, test, y_test, y_vocab):
     """saves test results for each run in a list"""
@@ -255,7 +261,7 @@ def main():
     dfAll, label, number_of_runs = user_input()
     
     # this has been moved to outside data_prep() to better serve as test set
-    train_and_valid, test = split_data(dfAll, test_size=0.05)
+    train_and_valid, test = split_data(dfAll, label=label, test_size=0.05)
     y_test = test.pop(label)
     y_test = y_test.astype(str)
     
@@ -296,8 +302,7 @@ def main():
             y_label = index[0]
             prob = index[1]
             expect = index[2]
-            print('Prediction is "{}" ({}%), expected "{}"'.format(
-                y_label, prob, expect))
+            print('Prediction is "{}" ({}%), expected "{}"'.format(y_label, prob, expect))
             if y_label == expect:
                 pred_accuracy += 1
         print('Prediction accuracy of validation from run {} is {}%' .format(test_list.index(run),100*(pred_accuracy/len(run))))
