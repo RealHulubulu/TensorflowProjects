@@ -1,8 +1,11 @@
 # TensorflowProjects
 
-These are projects I have been developing using Tensorflow Estimators. I am using the tutorials found at https://www.tensorflow.org/tutorials
+These are projects I have been developing using Tensorflow. I am using the tutorials found at https://www.tensorflow.org/tutorials
 as a base for my projects. I want to create simple apps that utilize Tensorflow Estimators. This will allow for people to explore the power behind machine learning, and specifically neural networks, in data analytics. All links are also found at the bottom of this file.
 Use Google Colab for a free environment where you can explore and test my code and tensorflow in general. It's pretty awesome.
+
+Update 6/28/2020: <br /> I changed the folder layout and added in some new code. I am now separating tutorials from apps that I make
+from the tutorials. The models may not be optimized but code should run.
 
 Update 6/14/2020: <br /> I added in two scripts that use DNNClassifier. The TensorflowDNNClassifier.py creates a model using a cars
 dataset from UC Irvine. The dataset isn't ideal for deep learning as it is simpler and linear. If you have a more complex dataset it
